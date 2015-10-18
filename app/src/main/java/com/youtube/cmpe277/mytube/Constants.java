@@ -25,11 +25,7 @@ public class Constants {
     public static final String MINE = "mine";
     public static final String SNIPPET = "snippet";
     public static final String STATISTICS = "statistics";
-
     public static final String MAX_RESULTS = "maxResults";
-
     public static final String KEYWORD = "q";
-
     public static final String TYPE = "type";
-
 }

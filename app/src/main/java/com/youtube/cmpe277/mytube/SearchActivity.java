@@ -23,14 +23,17 @@ public class SearchActivity extends AppCompatActivity
     private FragmentTabHost tabHost;
 
     private String playlistId;
+    private String addPlaylistResponseCode;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search);
+
         tabHost = (FragmentTabHost) findViewById(R.id.tabhost);
         tabHost.setup(this, getSupportFragmentManager(), R.id.tabFrameLayout);
+
         tabHost.addTab(
                 tabHost.newTabSpec("Search")
                         .setIndicator(getTabIndicator(tabHost.getContext(), R.string.searchvideos, android.R.drawable.ic_menu_search)),
@@ -167,7 +170,39 @@ public class SearchActivity extends AppCompatActivity
         @Override
         protected void onPostExecute(String responseCode) {
 
-            ApplicationSettings.getSharedSettings().setFavoritePlaylistId(playlistId);
+            if (playlistId == null) {
+                new AddFavoritePlaylistTask().execute();
+            } else {
+
+                ApplicationSettings.getSharedSettings().setFavoritePlaylistId(playlistId);
+            }
+        }
+    }
+
+
+    private class AddFavoritePlaylistTask extends AsyncTask<Void, Void, String> {
+
+        @Override
+        protected String doInBackground(Void... voids) {
+
+            try {
+
+                addPlaylistResponseCode = YouTubeConnector.createFavoritesPlaylist();
+            } catch (Exception e) {
+
+                e.printStackTrace();
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(String responseCode) {
+
+            if (addPlaylistResponseCode.equals("200")) {
+
+                new GetFavoritePlaylistTask().execute(Constants.PLAYLIST_NAME);
+            }
         }
     }
 }

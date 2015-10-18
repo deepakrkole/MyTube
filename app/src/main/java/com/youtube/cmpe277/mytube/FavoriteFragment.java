@@ -1,9 +1,9 @@
 package com.youtube.cmpe277.mytube;
 
 import android.content.Context;
+import android.content.res.Configuration;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -33,9 +33,7 @@ public class FavoriteFragment extends Fragment {
 
 
     View rootView;
-    private Handler handler;
-    private Handler deletionHandler;
-    private ArrayList<File> searchResults;
+    private ArrayList<File> searchResults = new ArrayList<File>();
     int selectedIndex;
     String removeFromFavoritesResponseCode = "-1";
 
@@ -44,9 +42,6 @@ public class FavoriteFragment extends Fragment {
                              Bundle savedInstanceState) {
 
         rootView = inflater.inflate(R.layout.fragment_favorite, container, false);
-
-        handler = new Handler();
-        deletionHandler = new Handler();
 
         addClickListener();
 
@@ -93,6 +88,23 @@ public class FavoriteFragment extends Fragment {
         getFavorites();
     }
 
+    @Override
+    public void onStop() {
+
+        super.onStop();
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+
+        super.onSaveInstanceState(savedInstanceState);
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+
+        super.onConfigurationChanged(newConfig);
+    }
 
     private void getFavorites() {
 
@@ -177,7 +189,10 @@ public class FavoriteFragment extends Fragment {
         @Override
         protected void onPostExecute(ArrayList<File> items) {
 
-            updateVideosFound(searchResults);
+            if (searchResults != null && searchResults.size() != 0) {
+
+                updateVideosFound(searchResults);
+            }
         }
     }
 

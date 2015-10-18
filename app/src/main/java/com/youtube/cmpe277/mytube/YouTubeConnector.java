@@ -1,8 +1,10 @@
 package com.youtube.cmpe277.mytube;
 
 import com.google.api.client.util.Joiner;
+import com.google.api.services.youtube.model.Playlist;
 import com.google.api.services.youtube.model.PlaylistItem;
 import com.google.api.services.youtube.model.PlaylistItemSnippet;
+import com.google.api.services.youtube.model.PlaylistSnippet;
 import com.google.api.services.youtube.model.ResourceId;
 
 import org.json.JSONArray;
@@ -103,6 +105,28 @@ public class YouTubeConnector {
         return videoMap;
     }
 
+    public static String createFavoritesPlaylist() throws JSONException {
+
+        PlaylistSnippet playlistSnippet = new PlaylistSnippet();
+        playlistSnippet.setTitle(Constants.PLAYLIST_NAME);
+
+        Playlist playlist = new Playlist();
+        playlist.setSnippet(playlistSnippet);
+
+        JSONObject insertPlaylistRequestBody = new JSONObject(playlist);
+
+        String insertPlayListURL = Constants.BASE_URL+Constants.PLAYLISTS;
+
+        StringBuilder insertPlayListURLBuilder = new StringBuilder();
+        insertPlayListURLBuilder.append(Constants.PART).append("="+"snippet");
+        String insertPlaylistParams = insertPlayListURLBuilder.toString();
+
+        String responseCode = ConnectionUtil.postRequest(insertPlayListURL, insertPlaylistParams,
+                insertPlaylistRequestBody.toString(), ApplicationSettings.getSharedSettings().getAccessToken(), true);
+
+        return responseCode;
+    }
+
     public static ArrayList <File> getFavorites() throws JSONException {
 
         ArrayList <File> playlistItemList = getVideosInFavorites();
@@ -134,12 +158,13 @@ public class YouTubeConnector {
     private static ArrayList <File> getVideosInFavorites () throws JSONException {
 
         /**
-         * https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=PLvHlrhuuRjgWjcspwO0ZapC42l-QKSHmU
+         * https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=PL-ATEPhTf2Qx11lhgZ52adMGDXxPVVT2P
          */
         String getPlayListItemsURL = Constants.BASE_URL+Constants.PLAYLISTITEMS;
 
         StringBuilder getPlayListItemsURLBuilder = new StringBuilder();
         getPlayListItemsURLBuilder.append(Constants.PART).append("="+"snippet");
+        getPlayListItemsURLBuilder.append("&").append(Constants.MAX_RESULTS).append("=").append("40");
         getPlayListItemsURLBuilder.append("&").append("playlistId").append("="+ApplicationSettings.getSharedSettings().getFavoritePlaylistId());
 
         String playlistItemsParams = getPlayListItemsURLBuilder.toString();
