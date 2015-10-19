@@ -5,5 +5,7 @@
     <string name="action_settings">Settings</string>
     <string name="title_activity_search">SearchActivity</string>
     <string name="searchvideos">"Search Videos"</string>
-    <string name="favourites">Favourites</string>
+    <string name="favourites">Favorites</string>
+    <string name="searchButton">Search</string>
+
 </resources>

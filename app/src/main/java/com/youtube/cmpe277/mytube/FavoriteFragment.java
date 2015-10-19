@@ -23,19 +23,18 @@ import java.util.List;
 
 public class FavoriteFragment extends Fragment {
 
-    FavoriteFragmentListener favoriteFragmentListener;
+    IFavoriteFragment listener;
 
-    public interface  FavoriteFragmentListener {
+    public interface  IFavoriteFragment {
 
-        public void didSelectFavoriteResult(String videoId);
-        public void didModifyFavorites();
+        public void playFavoriteVideo(String videoId);
     }
 
 
     View rootView;
-    private ArrayList<File> searchResults = new ArrayList<File>();
+    private ArrayList<YouTubeDataModel> searchResults = new ArrayList<YouTubeDataModel>();
     int selectedIndex;
-    String removeFromFavoritesResponseCode = "-1";
+    String remove = "-1";
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -57,10 +56,9 @@ public class FavoriteFragment extends Fragment {
             public void onItemClick(AdapterView<?> av, View v, int pos,
                                     long id) {
 
-                System.out.println("onItemClick Adapter View Favorite fragment");
                 String videoId = searchResults.get(pos).getId();
 
-                favoriteFragmentListener.didSelectFavoriteResult(videoId);
+                listener.playFavoriteVideo(videoId);
             }
 
         });
@@ -71,7 +69,7 @@ public class FavoriteFragment extends Fragment {
 
         super.onAttach(context);
 
-        favoriteFragmentListener = (FavoriteFragmentListener)context;
+        listener = (IFavoriteFragment)context;
     }
 
     @Override
@@ -111,9 +109,9 @@ public class FavoriteFragment extends Fragment {
         new FavoriteTask().execute();
     }
 
-    private void updateVideosFound(List <File> videoList) {
+    private void updateVideosFound(List <YouTubeDataModel> videoList) {
 
-        ArrayAdapter<File> adapter = new ArrayAdapter<File>(getActivity().getApplicationContext(), R.layout.search_item, videoList) {
+        ArrayAdapter<YouTubeDataModel> adapter = new ArrayAdapter<YouTubeDataModel>(getActivity().getApplicationContext(), R.layout.search_item, videoList) {
 
             @Override
             public View getView(int position, View convertView, ViewGroup parent) {
@@ -123,7 +121,7 @@ public class FavoriteFragment extends Fragment {
                     convertView = getActivity().getLayoutInflater().inflate(R.layout.search_item, parent, false);
                 }
 
-                File searchResult = searchResults.get(position);
+                YouTubeDataModel searchResult = searchResults.get(position);
 
                 ImageView thumbnail = (ImageView)convertView.findViewById(R.id.video_thumbnail);
                 TextView title = (TextView)convertView.findViewById(R.id.video_title);
@@ -141,10 +139,10 @@ public class FavoriteFragment extends Fragment {
 
                         selectedIndex = (int)v.getTag();
 
-                        File selectedVideo = searchResults.get(selectedIndex);
+                        YouTubeDataModel selectedVideo = searchResults.get(selectedIndex);
 
-                        removeFromFavoritesResponseCode = "-1";
-                        new RemoveFromFavoritesTask().execute(selectedVideo.getPlaylistId());
+                        remove = "-1";
+                        new RemoveFavoriteTask().execute(selectedVideo.getPlaylistId());
                     }
                 });
 
@@ -171,14 +169,14 @@ public class FavoriteFragment extends Fragment {
 
 
 
-    public class FavoriteTask extends AsyncTask<String, String, ArrayList<File>> {
+    public class FavoriteTask extends AsyncTask<String, String, ArrayList<YouTubeDataModel>> {
 
         @Override
-        protected ArrayList<File> doInBackground(String... keyword) {
+        protected ArrayList<YouTubeDataModel> doInBackground(String... keyword) {
 
             try {
 
-                searchResults = YouTubeConnector.getFavorites();
+                searchResults = YouTubeUtil.getFavorites();
             } catch (Exception e) {
 
                 e.printStackTrace();
@@ -187,7 +185,7 @@ public class FavoriteFragment extends Fragment {
         }
 
         @Override
-        protected void onPostExecute(ArrayList<File> items) {
+        protected void onPostExecute(ArrayList<YouTubeDataModel> items) {
 
             if (searchResults != null && searchResults.size() != 0) {
 
@@ -198,14 +196,14 @@ public class FavoriteFragment extends Fragment {
 
 
 
-    private class RemoveFromFavoritesTask extends AsyncTask <String , Void, String> {
+    private class RemoveFavoriteTask extends AsyncTask <String , Void, String> {
 
         @Override
         protected String doInBackground(String... videoId) {
 
             try {
 
-                removeFromFavoritesResponseCode = YouTubeConnector.removeFromFavorites(videoId[0]);
+                remove = YouTubeUtil.removeFromFavorites(videoId[0]);
             } catch (Exception e) {
 
                 e.printStackTrace();
@@ -217,7 +215,7 @@ public class FavoriteFragment extends Fragment {
         @Override
         protected void onPostExecute(String responseCode) {
 
-            if (Integer.parseInt(removeFromFavoritesResponseCode) != -1) {
+            if (Integer.parseInt(remove) != -1) {
 
                 updateVideoInSearchResults(false);
             }

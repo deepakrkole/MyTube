@@ -35,11 +35,15 @@ public class MainActivity
         ActivityCompat.OnRequestPermissionsResultCallback,
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
-        AccessTokenUtil.GoogleConnectionUtilProtocol {
+        TokenTask.ITokenTask {
 
 
     private static final int RC_SIGN_IN = 1;
     private static final int RC_PERM_GET_ACCOUNTS = 2;
+    static final int REQUEST_CODE_PICK_ACCOUNT = 1000;
+    static final int REQUEST_CODE_RECOVER_FROM_PLAY_SERVICES_ERROR = 1001;
+
+
     private static final String KEY_IS_RESOLVING = "is_resolving";
     private static final String KEY_SHOULD_RESOLVE = "should_resolve";
 
@@ -48,11 +52,6 @@ public class MainActivity
     private boolean mIsResolving = false;
     private boolean mShouldResolve = false;
 
-    static final int REQUEST_CODE_RECOVER_FROM_PLAY_SERVICES_ERROR = 1001;
-
-    /*******************************************************************************************************************
-     ****************************************   Activity Lifecycle  ****************************************************
-     *******************************************************************************************************************/
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -108,7 +107,7 @@ public class MainActivity
                 getUsername(mEmail);
             } else if (resultCode == RESULT_CANCELED) {
 
-                Toast.makeText(this, "Select an account to proceed", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Please select an account", Toast.LENGTH_SHORT).show();
             }
         } else if (requestCode == REQUEST_CODE_RECOVER_FROM_PLAY_SERVICES_ERROR
                 && resultCode == RESULT_OK) {
@@ -124,17 +123,12 @@ public class MainActivity
                 mShouldResolve = false;
             } else if (resultCode == RESULT_CANCELED) {
 
-                Toast.makeText(this, "You must pick an account to signin", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Please select an account to Sign In", Toast.LENGTH_SHORT).show();
             }
 
             mIsResolving = false;
         }
     }
-
-
-    /*******************************************************************************************************************
-     ****************************************   Helper Methods  ********************************************************
-     *******************************************************************************************************************/
 
     private void getUsername(String mEmail) {
 
@@ -145,10 +139,10 @@ public class MainActivity
 
             if (isDeviceOnline()) {
 
-                new AccessTokenUtil(this, mEmail).execute();
+                new TokenTask(this, mEmail).execute();
             } else {
 
-                Toast.makeText(this, "No internet connection", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "Please check your Internet Connection", Toast.LENGTH_LONG).show();
             }
         }
     }
@@ -167,22 +161,6 @@ public class MainActivity
         return false;
     }
 
-    public void handleException(final Exception e) {
-
-        runOnUiThread(new Runnable() {
-
-            @Override
-            public void run() {
-
-                if (e instanceof UserRecoverableAuthException) {
-
-                    Intent intent = ((UserRecoverableAuthException)e).getIntent();
-                    startActivityForResult(intent,
-                            REQUEST_CODE_RECOVER_FROM_PLAY_SERVICES_ERROR);
-                }
-            }
-        });
-    }
 
     private void showErrorDialog(ConnectionResult connectionResult) {
 
@@ -213,10 +191,6 @@ public class MainActivity
         }
     }
 
-
-    /*******************************************************************************************************************
-     ****************************************   Google API callbacks  **************************************************
-     *******************************************************************************************************************/
 
     @Override
     public void onRequestPermissionsResult(int requestCode,
@@ -266,11 +240,6 @@ public class MainActivity
         }
     }
 
-
-    /*******************************************************************************************************************
-     *******************************************   User events  ********************************************************
-     *******************************************************************************************************************/
-
     public void didTouchSignInButton(View v) {
 
         onSignInClicked();
@@ -282,8 +251,6 @@ public class MainActivity
         pickUserAccount();
     }
 
-    static final int REQUEST_CODE_PICK_ACCOUNT = 1000;
-
     private void pickUserAccount() {
         String[] accountTypes = new String[]{"com.google"};
 
@@ -293,22 +260,30 @@ public class MainActivity
     }
 
 
-    /*******************************************************************************************************************
-     ****************************************   AccessTokenUtil callback  **********************************************
-     *******************************************************************************************************************/
-
     @Override
-    public void didGenerateAccessToken(String accessToken) {
+    public void startTabbedActitvity(String accessToken) {
 
-        ApplicationSettings.getSharedSettings().setAccessToken(accessToken);
+        Constants.setAccessToken(accessToken);
         Intent intent = new Intent(this, SearchActivity.class);
         startActivity(intent);
     }
 
     @Override
-    public void didCatchException(Exception exc) {
+    public void handleExceptions(final Exception e) {
 
-        handleException(exc);
+        runOnUiThread(new Runnable() {
+
+            @Override
+            public void run() {
+
+                if (e instanceof UserRecoverableAuthException) {
+
+                    Intent intent = ((UserRecoverableAuthException) e).getIntent();
+                    startActivityForResult(intent,
+                            REQUEST_CODE_RECOVER_FROM_PLAY_SERVICES_ERROR);
+                }
+            }
+        });
     }
 
     @Override

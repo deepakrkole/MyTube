@@ -18,7 +18,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 public class SearchActivity extends AppCompatActivity
-        implements SearchFragment.SearchFragmentListener, FavoriteFragment.FavoriteFragmentListener {
+        implements SearchFragment.ISearchFragment, FavoriteFragment.IFavoriteFragment {
 
     private FragmentTabHost tabHost;
 
@@ -110,34 +110,21 @@ public class SearchActivity extends AppCompatActivity
 
 
     @Override
-    public void didSelectSearchResult(String videoId) {
+    public void playVideo(String videoId) {
 
         loadVideo(videoId);
     }
 
     @Override
-    public void didAddVideoToFavorites() {
-
-//        FavoriteFragment favoriteFragment = (FavoriteFragment) tabsPagerAdapter.getFragmentAtPosition(1);
-//        favoriteFragment.favoritesModified();
-    }
-
-    @Override
-    public void didSelectFavoriteResult(String videoId) {
+    public void playFavoriteVideo(String videoId) {
 
         loadVideo(videoId);
-    }
-
-    @Override
-    public void didModifyFavorites() {
-
     }
 
 
     private void loadVideo(String videoId) {
 
         try {
-            System.out.println("Selected video Id " + videoId);
 
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("vnd.youtube:" + videoId));
             intent.putExtra("force_fullscreen", true);
@@ -158,7 +145,7 @@ public class SearchActivity extends AppCompatActivity
 
             try {
 
-                playlistId = YouTubeConnector.getFavoritePlaylist(playlistName[0]);
+                playlistId = YouTubeUtil.getFavoritesList(playlistName[0]);
             } catch (Exception e) {
 
                 e.printStackTrace();
@@ -174,7 +161,7 @@ public class SearchActivity extends AppCompatActivity
                 new AddFavoritePlaylistTask().execute();
             } else {
 
-                ApplicationSettings.getSharedSettings().setFavoritePlaylistId(playlistId);
+                AppConfig.getSharedSettings().setFavoritePlaylistId(playlistId);
             }
         }
     }
@@ -187,7 +174,7 @@ public class SearchActivity extends AppCompatActivity
 
             try {
 
-                addPlaylistResponseCode = YouTubeConnector.createFavoritesPlaylist();
+                addPlaylistResponseCode = YouTubeUtil.createPlayList();
             } catch (Exception e) {
 
                 e.printStackTrace();

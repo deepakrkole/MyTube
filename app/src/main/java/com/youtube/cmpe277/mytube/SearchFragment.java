@@ -28,34 +28,36 @@ import java.util.List;
 
 public class SearchFragment extends Fragment {
 
-    SearchFragmentListener searchFragmentListener;
+    ISearchFragment fragmentListener;
 
-    public interface  SearchFragmentListener {
+    public interface ISearchFragment {
 
-        public void didSelectSearchResult(String videoId);
-        public void didAddVideoToFavorites();
+        public void playVideo(String videoId);
     }
 
 
-    View rootView;
-    private ArrayList<File> searchResults = new ArrayList<File>();
-    String addToFavoritesResponseCode = "-1";
-    String removeFromFavoritesResponseCode = "-1";
+    View v;
+    private ArrayList<YouTubeDataModel> searchResults = new ArrayList<YouTubeDataModel>();
+    String add = "-1";
+    String remove = "-1";
     int selectedIndex;
 
+    Button searchButton = null;
+    EditText searchEditText = null;
 
     @Override
     public void onAttach(Context context) {
 
         super.onAttach(context);
 
-        searchFragmentListener = (SearchFragmentListener)context;
+        fragmentListener = (ISearchFragment)context;
     }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
+
     }
 
     @Override
@@ -69,6 +71,7 @@ public class SearchFragment extends Fragment {
 
         super.onStop();
         hideSoftKeyboard(getActivity(), this.getView());
+        searchEditText.setText("");
     }
 
     @Override
@@ -93,13 +96,13 @@ public class SearchFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        System.out.println("onCreateView SearchFragment");
-        rootView = inflater.inflate(R.layout.fragment_search, container, false);
+        v = inflater.inflate(R.layout.fragment_search, container, false);
 
         addTextChangeListener();
         addClickListener();
 
-        return rootView;
+
+        return v;
     }
 
     @Override
@@ -113,7 +116,7 @@ public class SearchFragment extends Fragment {
 
     private void addTextChangeListener() {
 
-        EditText searchEditText = (EditText) rootView.findViewById(R.id.search_input);
+        EditText searchEditText = (EditText) v.findViewById(R.id.search_input);
 
         searchEditText.addTextChangedListener(new TextWatcher() {
 
@@ -135,32 +138,52 @@ public class SearchFragment extends Fragment {
         });
     }
 
-    private void addClickListener(){
-
-        ListView searchvideos = (ListView)rootView.findViewById(R.id.search_videos);
-        searchvideos.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
-            @Override
-            public void onItemClick(AdapterView<?> av, View v, int pos,
-                                    long id) {
-
-                System.out.println("onItemClick Adapter View");
-                String videoId = searchResults.get(pos).getId();
-
-                searchFragmentListener.didSelectSearchResult(videoId);
-            }
-
-        });
-    }
-
     private void searchOnYoutube(final String keywords) {
 
         new SearchTask().execute(keywords);
     }
 
-    private void updateVideosFound(List <File> videoList) {
+    private void addClickListener(){
 
-        ArrayAdapter<File> adapter = new ArrayAdapter<File>(getActivity().getApplicationContext(), R.layout.search_item, videoList) {
+        ListView searchedVideos = (ListView) v.findViewById(R.id.search_videos);
+        searchedVideos.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+            @Override
+            public void onItemClick(AdapterView<?> av, View v, int pos,
+                                    long id) {
+
+                String videoId = searchResults.get(pos).getId();
+                fragmentListener.playVideo(videoId);
+            }
+
+        });
+
+
+        searchButton = (Button)v.findViewById(R.id.s_button);
+        searchEditText = (EditText) v.findViewById(R.id.search_input);
+
+        searchButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+
+                System.out.print(searchEditText.getText().toString());
+                searchOnYoutube(searchEditText.getText().toString());
+
+
+            }
+        });
+    }
+
+
+
+    private void updateVideosFound(List <YouTubeDataModel> videoList) {
+
+        ArrayAdapter<YouTubeDataModel> adapter =
+                new ArrayAdapter<YouTubeDataModel>(
+                        getActivity().getApplicationContext(),
+                        R.layout.search_item,
+                        videoList) {
 
             @Override
             public View getView(int position, View convertView, ViewGroup parent) {
@@ -170,7 +193,7 @@ public class SearchFragment extends Fragment {
                     convertView = getActivity().getLayoutInflater().inflate(R.layout.search_item, parent, false);
                 }
 
-                final File searchResult = searchResults.get(position);
+                final YouTubeDataModel searchResult = searchResults.get(position);
 
                 ImageView thumbnail = (ImageView)convertView.findViewById(R.id.video_thumbnail);
                 TextView title = (TextView)convertView.findViewById(R.id.video_title);
@@ -194,16 +217,16 @@ public class SearchFragment extends Fragment {
 
                         selectedIndex = (int)v.getTag();
 
-                        File selectedVideo = searchResults.get(selectedIndex);
+                        YouTubeDataModel selectedVideo = searchResults.get(selectedIndex);
 
                         if (!selectedVideo.isFavorite()) {
 
-                            addToFavoritesResponseCode = "-1";
+                            add = "-1";
                             new AddToFavoritesTask().execute(selectedVideo);
                         } else {
 
-                            removeFromFavoritesResponseCode = "-1";
-                            new RemoveFromFavoritesTask().execute(selectedVideo.getPlaylistId());
+                            remove = "-1";
+                            new RemoveTask().execute(selectedVideo.getPlaylistId());
                         }
                     }
                 });
@@ -217,13 +240,13 @@ public class SearchFragment extends Fragment {
             }
         };
 
-        ListView searchvideos = (ListView)rootView.findViewById(R.id.search_videos);
+        ListView searchvideos = (ListView) v.findViewById(R.id.search_videos);
         searchvideos.setAdapter(adapter);
     }
 
-    private void updateVideoInSearchResults(Boolean isFavorite) {
+    private void updateSearchResults(Boolean isFavorite) {
 
-        File selectedVideo = searchResults.get(selectedIndex);
+        YouTubeDataModel selectedVideo = searchResults.get(selectedIndex);
 
         selectedVideo.setFavorite(isFavorite);
         searchResults.set(selectedIndex, selectedVideo);
@@ -233,15 +256,15 @@ public class SearchFragment extends Fragment {
 
 
 
-    private class SearchTask extends AsyncTask <String, String, ArrayList<File>> {
+    private class SearchTask extends AsyncTask <String, String, ArrayList<YouTubeDataModel>> {
 
 
         @Override
-        protected ArrayList<File> doInBackground(String... keyword) {
+        protected ArrayList<YouTubeDataModel> doInBackground(String... keyword) {
 
             try {
 
-                searchResults = YouTubeConnector.searchVideoWithKeywords(keyword[0]);
+                searchResults = YouTubeUtil.searchVideos(keyword[0]);
             } catch (Exception e) {
 
                 e.printStackTrace();
@@ -250,7 +273,7 @@ public class SearchFragment extends Fragment {
         }
 
         @Override
-        protected void onPostExecute(ArrayList<File> items) {
+        protected void onPostExecute(ArrayList<YouTubeDataModel> items) {
 
             if (searchResults != null && searchResults.size() != 0) {
 
@@ -261,14 +284,14 @@ public class SearchFragment extends Fragment {
 
 
 
-    private class AddToFavoritesTask extends AsyncTask <File, Void, String> {
+    private class AddToFavoritesTask extends AsyncTask <YouTubeDataModel, Void, String> {
 
         @Override
-        protected String doInBackground(File... file) {
+        protected String doInBackground(YouTubeDataModel... file) {
 
             try {
 
-                addToFavoritesResponseCode = YouTubeConnector.insertIntoFavorites(file[0]);
+                add = YouTubeUtil.insertInFavoritesList(file[0]);
             } catch (Exception e) {
 
                 e.printStackTrace();
@@ -280,23 +303,23 @@ public class SearchFragment extends Fragment {
         @Override
         protected void onPostExecute(String responseCode) {
 
-            if (Integer.parseInt(addToFavoritesResponseCode) == 200) {
+            if (Integer.parseInt(add) == 200) {
 
-                updateVideoInSearchResults(true);
+                updateSearchResults(true);
             }
         }
     }
 
 
 
-    private class RemoveFromFavoritesTask extends AsyncTask <String , Void, String> {
+    private class RemoveTask extends AsyncTask <String , Void, String> {
 
         @Override
         protected String doInBackground(String... videoId) {
 
             try {
 
-                removeFromFavoritesResponseCode = YouTubeConnector.removeFromFavorites(videoId[0]);
+                remove = YouTubeUtil.removeFromFavorites(videoId[0]);
             } catch (Exception e) {
 
                 e.printStackTrace();
@@ -308,9 +331,9 @@ public class SearchFragment extends Fragment {
         @Override
         protected void onPostExecute(String responseCode) {
 
-            if (Integer.parseInt(removeFromFavoritesResponseCode) == 204) {
+            if (Integer.parseInt(remove) == 204) {
 
-                updateVideoInSearchResults(false);
+                updateSearchResults(false);
             }
         }
     }
