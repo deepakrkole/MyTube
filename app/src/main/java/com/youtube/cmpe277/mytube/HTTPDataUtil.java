@@ -29,6 +29,7 @@ public class HTTPDataUtil {
             urlBuilder.append("?").append(reqParam);
             urlBuilder.append("&access_token=").append(accessToken);
 
+
             URL urlObj = new URL(urlBuilder.toString());
 
             con = (HttpsURLConnection)urlObj.openConnection();

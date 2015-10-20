@@ -16,6 +16,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -98,7 +99,7 @@ public class SearchFragment extends Fragment {
 
         v = inflater.inflate(R.layout.fragment_search, container, false);
 
-        addTextChangeListener();
+       // addTextChangeListener();
         addClickListener();
 
 
@@ -200,6 +201,8 @@ public class SearchFragment extends Fragment {
                 TextView publishedDate = (TextView)convertView.findViewById(R.id.publishedDate);
                 TextView numberOfViews = (TextView)convertView.findViewById(R.id.numberOfViews);
                 Button starButton = (Button)convertView.findViewById(R.id.star);
+                CheckBox checkBox = (CheckBox)convertView.findViewById(R.id.selectionCheckBox);
+                checkBox.setVisibility(View.INVISIBLE);
                 starButton.setTag(position);
 
                 if (searchResult.isFavorite()) {

@@ -11,11 +11,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.net.URLEncoder;
 import java.util.*;
 
 public class YouTubeUtil {
-
-
 
     //JSON Utilities
 
@@ -74,7 +73,7 @@ public class YouTubeUtil {
         urlBuilder.append(Constants.PART).append("=" + "id,snippet");
         urlBuilder.append("&").append(Constants.MAX_RESULTS);
         urlBuilder.append("=" + Constants.VIDEOS_PER_PAGE);
-        urlBuilder.append("&").append(Constants.KEYWORD).append("=").append(keywords);
+        urlBuilder.append("&").append(Constants.KEYWORD).append("=").append(URLEncoder.encode(keywords, "utf-8"));
         urlBuilder.append("&").append(Constants.TYPE).append("=").append("video");
 
 

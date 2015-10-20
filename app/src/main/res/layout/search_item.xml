@@ -6,10 +6,20 @@
     android:padding="16dp"
     >
 
+    <CheckBox
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/selectionCheckBox"
+        android:layout_below="@+id/star"
+        android:layout_alignParentRight="true"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
+        />
+
     <ImageView
         android:id="@+id/video_thumbnail"
-        android:layout_width="128dp"
-        android:layout_height="128dp"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
         android:layout_marginRight="20dp"
@@ -72,11 +82,14 @@
         android:id="@+id/star"
         android:layout_width="20dp"
         android:layout_height="20dp"
+        android:layout_marginRight="5dp"
         android:focusable="false"
         android:focusableInTouchMode="false"
         android:layout_centerVertical="true"
         android:layout_below="@+id/video_title"
         android:layout_alignParentRight="true"
         />
+
+
 
 </RelativeLayout>
